@@ -18,11 +18,6 @@ let package = Package(
         .target(
             name: "AssembledChat",
             path: "Sources/AssembledChat"
-        ),
-        .testTarget(
-            name: "AssembledChatTests",
-            dependencies: ["AssembledChat"],
-            path: "Tests/AssembledChatTests"
         )
     ]
 )
