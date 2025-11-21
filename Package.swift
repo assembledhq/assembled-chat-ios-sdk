@@ -17,8 +17,13 @@ let package = Package(
     targets: [
         .target(
             name: "AssembledChat",
-            path: "Sources/AssembledChat"
+            path: "Sources/AssembledChat",
+            resources: nil,
+            swiftSettings: [
+                .define("SPM")
+            ]
         )
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )
 
