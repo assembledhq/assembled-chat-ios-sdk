@@ -115,6 +115,39 @@ try await chat.setUserData(userData)
 - `setDebug(_:)` - Enable/disable debug mode
 - `teardown()` - Clean up and remove the chat widget
 
+## 📱 Example App
+
+A comprehensive example app demonstrating all SDK features is available in the [`Examples/`](Examples/) directory.
+
+### What's Included
+
+The example app showcases:
+- ✅ **SwiftUI integration** - Modal and embedded presentations
+- ✅ **UIKit integration** - Full delegate pattern and view controller examples
+- ✅ **User authentication** - JWT token and user data configuration
+- ✅ **All SDK methods** - Complete API demonstration
+- ✅ **Best practices** - Production-ready patterns and architecture
+
+### Quick Start with Examples
+
+```bash
+# Clone the repository
+git clone https://github.com/assembledhq/assembled-chat-ios-sdk.git
+
+# Navigate to examples
+cd assembled-chat-ios-sdk/Examples
+
+# Open in Xcode
+open AssembledChatExample.xcodeproj
+```
+
+### Documentation
+
+- **[Quick Start Guide](Examples/QUICKSTART.md)** - Get running in 5 minutes
+- **[Complete README](Examples/README.md)** - Full documentation
+- **[Features Guide](Examples/FEATURES.md)** - Detailed feature reference
+- **[Architecture Guide](Examples/ARCHITECTURE.md)** - Design patterns and structure
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
