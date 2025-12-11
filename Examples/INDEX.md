@@ -236,9 +236,6 @@ cd assembled-chat-ios-sdk/Examples
 
 # Open in Xcode
 open AssembledChatExample.xcodeproj
-
-# Or use SPM
-open Package.swift
 ```
 
 ## 🔗 External Resources

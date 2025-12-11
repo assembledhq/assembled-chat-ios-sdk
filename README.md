@@ -134,12 +134,17 @@ The example app showcases:
 # Clone the repository
 git clone https://github.com/assembledhq/assembled-chat-ios-sdk.git
 
-# Navigate to examples
+# Navigate to examples and open in Xcode
 cd assembled-chat-ios-sdk/Examples
-
-# Open in Xcode
 open AssembledChatExample.xcodeproj
 ```
+
+Then in Xcode:
+1. **Wait** for Xcode to finish resolving packages (check the status bar)
+2. **Select simulator**: Click the device dropdown (top center) → choose **iPhone 16** (or any iPhone)
+3. **Run**: Press `Cmd + R` (or click ▶️) to build, install, and launch the app
+
+> **Note:** Xcode will automatically open the iOS Simulator when you run the app.
 
 ### Documentation
 

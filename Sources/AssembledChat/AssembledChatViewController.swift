@@ -42,12 +42,8 @@ public class AssembledChatViewController: UIViewController {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        if !chat.isReady {
-            Task {
-                try? await chat.initialize()
-                chat.open()
-            }
-        }
+        // Open the chat view when the view appears
+        chatView?.open()
     }
     
     /// Sets up a close button in the navigation bar when the view controller
@@ -81,6 +77,9 @@ public class AssembledChatViewController: UIViewController {
         ])
         
         self.chatView = chatView
+        
+        // Load the chat view
+        chatView.load()
     }
     
     @objc private func closeTapped() {

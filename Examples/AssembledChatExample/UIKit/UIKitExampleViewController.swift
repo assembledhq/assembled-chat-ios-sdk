@@ -2,7 +2,7 @@
 //  UIKitExampleViewController.swift
 //  AssembledChatExample
 //
-//  UIKit implementation example
+//  UIKit implementation example - matches SwiftUI design
 //
 
 import UIKit
@@ -11,13 +11,17 @@ import AssembledChat
 class UIKitExampleViewController: UIViewController {
     
     // MARK: - Properties
-    private var chat: AssembledChat?
-    private let companyId = UserDefaults.standard.string(forKey: "companyId") ?? "your-company-id"
+    private var userName: String = ""
+    private var userEmail: String = ""
+    private var companyId: String = "your-company-id"
+    private var isDebugEnabled: Bool = false
+    private var statusMessage: String?
     
     // MARK: - UI Components
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.keyboardDismissMode = .onDrag
         return scrollView
     }()
     
@@ -31,12 +35,7 @@ class UIKitExampleViewController: UIViewController {
         return stackView
     }()
     
-    private let headerView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
+    // Header
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         let config = UIImage.SymbolConfiguration(pointSize: 60, weight: .regular)
@@ -50,9 +49,8 @@ class UIKitExampleViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Assembled Chat SDK"
-        label.font = .preferredFont(forTextStyle: .title2)
+        label.font = .systemFont(ofSize: 22, weight: .bold)
         label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
@@ -62,102 +60,89 @@ class UIKitExampleViewController: UIViewController {
         label.font = .preferredFont(forTextStyle: .subheadline)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    private let initializeButton: UIButton = {
+    // User Info Fields
+    private let nameTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Name"
+        textField.borderStyle = .roundedRect
+        textField.autocorrectionType = .no
+        return textField
+    }()
+    
+    private let emailTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Email"
+        textField.borderStyle = .roundedRect
+        textField.keyboardType = .emailAddress
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
+        return textField
+    }()
+    
+    private let companyIdTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Company ID"
+        textField.borderStyle = .roundedRect
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
+        return textField
+    }()
+    
+    private lazy var saveUserInfoButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Initialize Chat", for: .normal)
-        button.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
+        button.setTitle(" Save User Info", for: .normal)
+        button.setImage(UIImage(systemName: "checkmark.circle.fill"), for: .normal)
         button.backgroundColor = .systemBlue
         button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 12
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
-        button.translatesAutoresizingMaskIntoConstraints = false
+        button.tintColor = .white
+        button.layer.cornerRadius = 10
+        button.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        button.addTarget(self, action: #selector(saveUserInfo), for: .touchUpInside)
         return button
     }()
     
-    private let openChatButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Open Chat", for: .normal)
-        button.setImage(UIImage(systemName: "message.fill"), for: .normal)
-        button.backgroundColor = .systemGreen
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 12
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
-        button.isEnabled = false
-        button.translatesAutoresizingMaskIntoConstraints = false
+    // Chat Action Buttons
+    private lazy var openChatModalButton: UIButton = {
+        let button = createActionButton(title: "Open Chat Modal", icon: "arrow.up.right.square", color: .systemBlue)
+        button.addTarget(self, action: #selector(openChatModal), for: .touchUpInside)
         return button
     }()
     
-    private let closeChatButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Close Chat", for: .normal)
-        button.setImage(UIImage(systemName: "xmark.circle"), for: .normal)
-        button.backgroundColor = .systemOrange
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 12
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
-        button.isEnabled = false
-        button.translatesAutoresizingMaskIntoConstraints = false
+    private lazy var openFullScreenButton: UIButton = {
+        let button = createActionButton(title: "Open Full Screen Chat", icon: "rectangle.portrait", color: .systemBlue)
+        button.addTarget(self, action: #selector(openFullScreenChat), for: .touchUpInside)
         return button
     }()
     
-    private let showLauncherButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Show Launcher", for: .normal)
-        button.setImage(UIImage(systemName: "eye"), for: .normal)
-        button.backgroundColor = .systemPurple
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 12
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
-        button.isEnabled = false
-        button.translatesAutoresizingMaskIntoConstraints = false
+    private lazy var debugModeButton: UIButton = {
+        let button = createActionButton(title: "Enable Debug Mode", icon: "ant", color: .systemBlue)
+        button.addTarget(self, action: #selector(toggleDebugMode), for: .touchUpInside)
         return button
     }()
     
-    private let hideLauncherButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Hide Launcher", for: .normal)
-        button.setImage(UIImage(systemName: "eye.slash"), for: .normal)
-        button.backgroundColor = .systemGray
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 12
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
-        button.isEnabled = false
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
+    // Status Labels
+    private let sdkVersionLabel = UIKitExampleViewController.createStatusRow(title: "SDK Version", value: "1.0.0")
+    private let debugModeLabel = UIKitExampleViewController.createStatusRow(title: "Debug Mode", value: "Disabled")
+    private let userLabel = UIKitExampleViewController.createStatusRow(title: "User", value: "Not set")
     
-    private let openViewControllerButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Open Full Screen Chat", for: .normal)
-        button.setImage(UIImage(systemName: "rectangle.portrait"), for: .normal)
-        button.backgroundColor = .systemIndigo
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 12
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
-    private let statusLabel: UILabel = {
+    private let statusMessageLabel: UILabel = {
         let label = UILabel()
-        label.text = "Status: Not initialized"
-        label.font = .preferredFont(forTextStyle: .footnote)
+        label.font = .preferredFont(forTextStyle: .caption1)
         label.textColor = .secondaryLabel
         label.numberOfLines = 0
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
         return label
     }()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        loadUserDefaults()
         setupUI()
-        setupActions()
+        updateUI()
     }
     
     // MARK: - Setup
@@ -168,32 +153,38 @@ class UIKitExampleViewController: UIViewController {
         view.addSubview(scrollView)
         scrollView.addSubview(contentStackView)
         
-        // Setup header
+        // Header Section
         let headerStack = UIStackView(arrangedSubviews: [iconImageView, titleLabel, subtitleLabel])
         headerStack.axis = .vertical
         headerStack.spacing = 12
         headerStack.alignment = .center
-        
         contentStackView.addArrangedSubview(headerStack)
         
-        // Add action buttons
-        contentStackView.addArrangedSubview(createSectionLabel("Initialization"))
-        contentStackView.addArrangedSubview(initializeButton)
+        // User Information Section
+        let userInfoSection = createGroupBox(
+            title: "User Information",
+            icon: "person.circle",
+            content: [nameTextField, emailTextField, companyIdTextField, saveUserInfoButton]
+        )
+        contentStackView.addArrangedSubview(userInfoSection)
         
-        contentStackView.addArrangedSubview(createSectionLabel("Chat Controls"))
-        contentStackView.addArrangedSubview(openChatButton)
-        contentStackView.addArrangedSubview(closeChatButton)
+        // Chat Actions Section
+        let chatActionsSection = createGroupBox(
+            title: "Chat Actions",
+            icon: "bubble.left",
+            content: [openChatModalButton, openFullScreenButton, debugModeButton]
+        )
+        contentStackView.addArrangedSubview(chatActionsSection)
         
-        contentStackView.addArrangedSubview(createSectionLabel("Launcher Controls"))
-        contentStackView.addArrangedSubview(showLauncherButton)
-        contentStackView.addArrangedSubview(hideLauncherButton)
+        // Status Section
+        let statusSection = createGroupBox(
+            title: "Status",
+            icon: "info.circle",
+            content: [sdkVersionLabel, debugModeLabel, userLabel, statusMessageLabel]
+        )
+        contentStackView.addArrangedSubview(statusSection)
         
-        contentStackView.addArrangedSubview(createSectionLabel("Navigation"))
-        contentStackView.addArrangedSubview(openViewControllerButton)
-        
-        contentStackView.addArrangedSubview(createSectionLabel("Status"))
-        contentStackView.addArrangedSubview(statusLabel)
-        
+        // Constraints
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -207,72 +198,112 @@ class UIKitExampleViewController: UIViewController {
             contentStackView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
             iconImageView.heightAnchor.constraint(equalToConstant: 80),
-            
-            initializeButton.heightAnchor.constraint(equalToConstant: 50),
-            openChatButton.heightAnchor.constraint(equalToConstant: 50),
-            closeChatButton.heightAnchor.constraint(equalToConstant: 50),
-            showLauncherButton.heightAnchor.constraint(equalToConstant: 50),
-            hideLauncherButton.heightAnchor.constraint(equalToConstant: 50),
-            openViewControllerButton.heightAnchor.constraint(equalToConstant: 50),
         ])
+        
+        // Populate text fields
+        nameTextField.text = userName
+        emailTextField.text = userEmail
+        companyIdTextField.text = companyId
     }
     
-    private func createSectionLabel(_ text: String) -> UILabel {
-        let label = UILabel()
-        label.text = text
-        label.font = .preferredFont(forTextStyle: .headline)
-        label.textColor = .label
-        return label
+    private func createGroupBox(title: String, icon: String, content: [UIView]) -> UIView {
+        let container = UIView()
+        container.backgroundColor = .secondarySystemGroupedBackground
+        container.layer.cornerRadius = 12
+        
+        // Header
+        let iconImage = UIImageView(image: UIImage(systemName: icon))
+        iconImage.tintColor = .secondaryLabel
+        iconImage.contentMode = .scaleAspectFit
+        iconImage.translatesAutoresizingMaskIntoConstraints = false
+        
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
+        titleLabel.textColor = .secondaryLabel
+        
+        let headerStack = UIStackView(arrangedSubviews: [iconImage, titleLabel])
+        headerStack.spacing = 6
+        headerStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Content stack
+        let contentStack = UIStackView(arrangedSubviews: content)
+        contentStack.axis = .vertical
+        contentStack.spacing = 12
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        container.addSubview(headerStack)
+        container.addSubview(contentStack)
+        
+        NSLayoutConstraint.activate([
+            iconImage.widthAnchor.constraint(equalToConstant: 16),
+            iconImage.heightAnchor.constraint(equalToConstant: 16),
+            
+            headerStack.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
+            headerStack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
+            headerStack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
+            
+            contentStack.topAnchor.constraint(equalTo: headerStack.bottomAnchor, constant: 12),
+            contentStack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
+            contentStack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
+            contentStack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -12),
+        ])
+        
+        return container
     }
     
-    private func setupActions() {
-        initializeButton.addTarget(self, action: #selector(initializeChat), for: .touchUpInside)
-        openChatButton.addTarget(self, action: #selector(openChat), for: .touchUpInside)
-        closeChatButton.addTarget(self, action: #selector(closeChat), for: .touchUpInside)
-        showLauncherButton.addTarget(self, action: #selector(showLauncher), for: .touchUpInside)
-        hideLauncherButton.addTarget(self, action: #selector(hideLauncher), for: .touchUpInside)
-        openViewControllerButton.addTarget(self, action: #selector(openFullScreenChat), for: .touchUpInside)
+    private func createActionButton(title: String, icon: String, color: UIColor) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(" \(title)", for: .normal)
+        button.setImage(UIImage(systemName: icon), for: .normal)
+        button.tintColor = color
+        button.contentHorizontalAlignment = .center
+        button.layer.borderWidth = 1
+        button.layer.borderColor = color.cgColor
+        button.layer.cornerRadius = 10
+        button.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        return button
+    }
+    
+    private static func createStatusRow(title: String, value: String) -> UIStackView {
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = .preferredFont(forTextStyle: .subheadline)
+        titleLabel.textColor = .secondaryLabel
+        
+        let valueLabel = UILabel()
+        valueLabel.text = value
+        valueLabel.font = .systemFont(ofSize: 15, weight: .medium)
+        valueLabel.textAlignment = .right
+        valueLabel.tag = 100 // Tag to find the value label later
+        
+        let stack = UIStackView(arrangedSubviews: [titleLabel, valueLabel])
+        stack.distribution = .equalSpacing
+        return stack
     }
     
     // MARK: - Actions
-    @objc private func initializeChat() {
-        let config = AssembledChatConfiguration(companyId: companyId)
-        chat = AssembledChat(configuration: config)
-        chat?.delegate = self
+    @objc private func saveUserInfo() {
+        userName = nameTextField.text ?? ""
+        userEmail = emailTextField.text ?? ""
+        companyId = companyIdTextField.text ?? "your-company-id"
         
-        Task {
-            do {
-                try await chat?.initialize()
-                await MainActor.run {
-                    updateStatus("Initialized successfully")
-                    enableButtons()
-                }
-            } catch {
-                await MainActor.run {
-                    updateStatus("Initialization failed: \(error.localizedDescription)")
-                }
-            }
-        }
+        UserDefaults.standard.set(userName, forKey: "userName")
+        UserDefaults.standard.set(userEmail, forKey: "userEmail")
+        UserDefaults.standard.set(companyId, forKey: "companyId")
+        
+        statusMessage = "User info saved successfully"
+        updateUI()
+        
+        // Dismiss keyboard
+        view.endEditing(true)
     }
     
-    @objc private func openChat() {
-        chat?.open()
-        updateStatus("Chat opened")
-    }
-    
-    @objc private func closeChat() {
-        chat?.close()
-        updateStatus("Chat closed")
-    }
-    
-    @objc private func showLauncher() {
-        chat?.showLauncher()
-        updateStatus("Launcher shown")
-    }
-    
-    @objc private func hideLauncher() {
-        chat?.hideLauncher()
-        updateStatus("Launcher hidden")
+    @objc private func openChatModal() {
+        let chatVC = FullScreenChatViewController(companyId: companyId)
+        let navController = UINavigationController(rootViewController: chatVC)
+        navController.modalPresentationStyle = .pageSheet
+        present(navController, animated: true)
     }
     
     @objc private func openFullScreenChat() {
@@ -282,34 +313,43 @@ class UIKitExampleViewController: UIViewController {
         present(navController, animated: true)
     }
     
+    @objc private func toggleDebugMode() {
+        isDebugEnabled.toggle()
+        statusMessage = "Debug mode \(isDebugEnabled ? "enabled" : "disabled")"
+        updateUI()
+    }
+    
     // MARK: - Helpers
-    private func enableButtons() {
-        openChatButton.isEnabled = true
-        closeChatButton.isEnabled = true
-        showLauncherButton.isEnabled = true
-        hideLauncherButton.isEnabled = true
+    private func loadUserDefaults() {
+        userName = UserDefaults.standard.string(forKey: "userName") ?? ""
+        userEmail = UserDefaults.standard.string(forKey: "userEmail") ?? ""
+        if let savedCompanyId = UserDefaults.standard.string(forKey: "companyId"), !savedCompanyId.isEmpty {
+            companyId = savedCompanyId
+        }
     }
     
-    private func updateStatus(_ message: String) {
-        statusLabel.text = "Status: \(message)"
+    private func updateUI() {
+        // Update debug mode button
+        let debugIcon = isDebugEnabled ? "ant.fill" : "ant"
+        let debugTitle = isDebugEnabled ? "Disable Debug Mode" : "Enable Debug Mode"
+        debugModeButton.setTitle(" \(debugTitle)", for: .normal)
+        debugModeButton.setImage(UIImage(systemName: debugIcon), for: .normal)
+        
+        // Update status labels
+        if let valueLabel = debugModeLabel.viewWithTag(100) as? UILabel {
+            valueLabel.text = isDebugEnabled ? "Enabled" : "Disabled"
+        }
+        
+        if let valueLabel = userLabel.viewWithTag(100) as? UILabel {
+            valueLabel.text = userName.isEmpty ? "Not set" : userName
+        }
+        
+        // Update status message
+        if let message = statusMessage {
+            statusMessageLabel.text = message
+            statusMessageLabel.isHidden = false
+        } else {
+            statusMessageLabel.isHidden = true
+        }
     }
 }
-
-// MARK: - AssembledChatDelegate
-extension UIKitExampleViewController: AssembledChatDelegate {
-    func assembledChat(didReceiveError error: Error) {
-        updateStatus("Error: \(error.localizedDescription)")
-        print("❌ Chat error: \(error)")
-    }
-    
-    func assembledChatDidOpen() {
-        updateStatus("Chat is now open")
-        print("✅ Chat opened")
-    }
-    
-    func assembledChatDidClose() {
-        updateStatus("Chat is now closed")
-        print("✅ Chat closed")
-    }
-}
-

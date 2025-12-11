@@ -117,7 +117,13 @@ extension ViewController: AssembledChatDelegate {
 
 ### 4. Run Your App
 
-Press `Cmd + R` and test the chat!
+In Xcode:
+1. **Wait** for Xcode to finish loading/indexing
+2. **Select scheme**: Choose **AssembledChatExample** from the scheme dropdown (top left)
+3. **Select simulator**: Choose **iPhone 16** (or any iPhone) from the device dropdown
+4. **Run**: Press `Cmd + R` to build, install, and launch
+
+> **Note:** Xcode will automatically open the iOS Simulator and install the app when you run.
 
 ## 🎯 Next Steps
 

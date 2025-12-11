@@ -17,13 +17,23 @@ public struct AssembledChatSwiftUIView: UIViewRepresentable {
         self.delegate = delegate
     }
     
+    public init(companyId: String, profileId: String?, delegate: AssembledChatDelegate? = nil) {
+        self.configuration = AssembledChatConfiguration(companyId: companyId, profileId: profileId)
+        self.delegate = delegate
+    }
+    
     public func makeUIView(context: Context) -> AssembledChatView {
         let chatView = AssembledChatView(configuration: configuration, delegate: delegate)
         chatView.load()
+        chatView.open()
         return chatView
     }
     
-    public func updateUIView(_ uiView: AssembledChatView, context: Context) {}
+    public func updateUIView(_ uiView: AssembledChatView, context: Context) {
+        // Ensure the chat view is visible when SwiftUI re-presents it
+        uiView.isHidden = false
+        uiView.open()
+    }
 }
 
 @available(iOS 13.0, *)
