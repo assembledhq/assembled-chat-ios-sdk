@@ -121,6 +121,7 @@ public class AssembledChatView: UIView {
         
         executeWhenReady {
             self.isOpen = true
+            self.isHidden = false
             self.messageBridge.setVisibility(true)
         }
     }
@@ -132,6 +133,7 @@ public class AssembledChatView: UIView {
         
         executeWhenReady {
             self.isOpen = false
+            self.isHidden = true
             self.messageBridge.setVisibility(false)
         }
     }
