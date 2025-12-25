@@ -7,6 +7,8 @@ internal protocol MessageBridgeDelegate: AnyObject {
 }
 
 internal class MessageBridge: NSObject, WKScriptMessageHandler {
+    static let trustedOrigin = "https://cal.assembledhq.com"
+
     weak var delegate: MessageBridgeDelegate?
     private weak var webView: WKWebView?
     private let encoder = JSONEncoder()
@@ -79,7 +81,7 @@ internal class MessageBridge: NSObject, WKScriptMessageHandler {
             return
         }
         
-        let script = "window.postMessage(\(jsonString), '*');"
+        let script = "window.postMessage(\(jsonString), '\(Self.trustedOrigin)');"
         webView.evaluateJavaScript(script) { _, error in
             if let error = error {
                 self.delegate?.messageBridge(self, didReceiveError: ChatError.bridgeError(error.localizedDescription))

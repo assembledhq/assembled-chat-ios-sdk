@@ -83,7 +83,7 @@ public class AssembledChatView: UIView {
         webView.configuration.userContentController.addUserScript(script)
     }
     
-    private static let baseURL = "https://cal.assembledhq.com/public_chat.html"
+    private static let baseURL = "\(MessageBridge.trustedOrigin)/public_chat.html"
     
     public func load() {
         guard var urlComponents = URLComponents(string: Self.baseURL) else {
