@@ -73,16 +73,20 @@ internal class MessageBridge: NSObject, WKScriptMessageHandler {
     }
     
     func sendMessage(_ message: [String: Any]) {
-        guard let webView = webView else { return }
-        
+        guard let webView = webView else {
+            delegate?.messageBridge(self, didReceiveError: ChatError.bridgeError("WebView is no longer available"))
+            return
+        }
+
         guard let jsonData = try? JSONSerialization.data(withJSONObject: message),
               let jsonString = String(data: jsonData, encoding: .utf8) else {
             delegate?.messageBridge(self, didReceiveError: ChatError.bridgeError("Failed to serialize message"))
             return
         }
-        
+
         let script = "window.postMessage(\(jsonString), '\(Self.trustedOrigin)');"
-        webView.evaluateJavaScript(script) { _, error in
+        webView.evaluateJavaScript(script) { [weak self] _, error in
+            guard let self = self else { return }
             if let error = error {
                 self.delegate?.messageBridge(self, didReceiveError: ChatError.bridgeError(error.localizedDescription))
             }
@@ -105,13 +109,16 @@ internal class MessageBridge: NSObject, WKScriptMessageHandler {
     }
     
     func updateUserData(_ userData: UserData) {
-        guard let userDataDict = try? userData.asDictionary() else { return }
-        
+        guard let userDataDict = try? userData.asDictionary() else {
+            delegate?.messageBridge(self, didReceiveError: ChatError.invalidUserData("Failed to serialize user data"))
+            return
+        }
+
         let message: [String: Any] = [
             "type": "USER_DATA_UPDATE",
             "userData": userDataDict
         ]
-        
+
         sendMessage(message)
     }
     
