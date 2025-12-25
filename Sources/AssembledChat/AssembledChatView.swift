@@ -11,7 +11,8 @@ public class AssembledChatView: UIView {
     private var isLoaded = false
     private var isOpen = false
     private var pendingOperations: [() -> Void] = []
-    
+    private let stateQueue = DispatchQueue(label: "com.assembled.chat.state")
+
     // MARK: - Initialization
     
     /// Initialize the chat view with configuration
@@ -169,18 +170,28 @@ public class AssembledChatView: UIView {
     }
     
     private func executeWhenReady(_ operation: @escaping () -> Void) {
-        if isLoaded {
-            operation()
-        } else {
-            pendingOperations.append(operation)
+        stateQueue.async { [weak self] in
+            guard let self = self else { return }
+            if self.isLoaded {
+                DispatchQueue.main.async { operation() }
+            } else {
+                self.pendingOperations.append(operation)
+            }
         }
     }
-    
-    private func processPendingOperations() {
-        for operation in pendingOperations {
-            operation()
+
+    private func markAsLoaded() {
+        stateQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.isLoaded = true
+            let operations = self.pendingOperations
+            self.pendingOperations.removeAll()
+            DispatchQueue.main.async {
+                for operation in operations {
+                    operation()
+                }
+            }
         }
-        pendingOperations.removeAll()
     }
     
     deinit {
@@ -226,8 +237,7 @@ extension AssembledChatView: MessageBridgeDelegate {
     func messageBridge(_ bridge: MessageBridge, didReceiveEvent event: ChatEvent) {
         switch event {
         case .loaded:
-            isLoaded = true
-            processPendingOperations()
+            markAsLoaded()
             delegate?.assembledChatDidLoad()
             
         case .opened:
