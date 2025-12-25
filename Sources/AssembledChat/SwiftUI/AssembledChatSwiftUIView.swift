@@ -65,8 +65,8 @@ public class AssembledChatManager: ObservableObject {
         self.init(configuration: configuration)
     }
     
-    public func initialize() async throws {
-        try await chat.initialize()
+    public func initialize(timeout: TimeInterval = AssembledChat.defaultInitializationTimeout) async throws {
+        try await chat.initialize(timeout: timeout)
     }
     
     public func open() {

@@ -31,49 +31,112 @@ public class AssembledChat {
     
     private var chatView: AssembledChatView?
     private var isInitialized = false
-    
+    private var initializationID: UUID?
+
     public init(configuration: AssembledChatConfiguration) {
         self.configuration = configuration
     }
-    
+
+    public static let defaultInitializationTimeout: TimeInterval = 10.0
+
     /// Initializes the chat widget by adding it to the key window.
-    ///
-    /// This method must be called before using any other chat methods.
-    /// It creates the underlying WebView and loads the chat interface.
-    ///
+    /// - Parameter timeout: Maximum time to wait for initialization. Defaults to 10 seconds.
     /// - Throws: `ChatError.initializationFailed` if the key window cannot be found.
-    public func initialize() async throws {
+    /// - Throws: `ChatError.timeout` if initialization does not complete within the timeout period.
+    public func initialize(timeout: TimeInterval = AssembledChat.defaultInitializationTimeout) async throws {
         guard !isInitialized else { return }
-        
-        return try await withCheckedThrowingContinuation { continuation in
+
+        let initID = UUID()
+        initializationID = initID
+        defer { initializationID = nil }
+
+        try await runWithTimeout(timeout: timeout, onTimeout: { [weak self] in
+            self?.initializationID = nil
+        }) { [weak self] in
+            guard let self = self else { return }
+            try await self.performInitialization(initializationID: initID)
+        }
+    }
+
+    private func runWithTimeout(
+        timeout: TimeInterval,
+        onTimeout: @escaping () -> Void,
+        operation: @escaping () async throws -> Void
+    ) async throws {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                onTimeout()
+                throw ChatError.timeout
+            }
+            group.addTask {
+                try await operation()
+            }
+
+            do {
+                guard let _ = try await group.next() else {
+                    group.cancelAll()
+                    return
+                }
+                group.cancelAll()
+                await Self.drainTaskGroup(&group)
+            } catch {
+                group.cancelAll()
+                await Self.drainTaskGroup(&group)
+                throw error
+            }
+        }
+    }
+
+    private static func drainTaskGroup(_ group: inout ThrowingTaskGroup<Void, Error>) async {
+        do {
+            while let _ = try await group.next() { }
+        } catch is CancellationError {
+            // Ignore cancellation from the timeout task.
+        } catch {
+            // Ignore other errors since the caller already handled the first result.
+        }
+    }
+
+    private func performInitialization(initializationID: UUID) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else {
                     continuation.resume(throwing: ChatError.unknown("Instance was deallocated"))
                     return
                 }
-                
+
+                guard self.initializationID == initializationID else {
+                    continuation.resume(throwing: CancellationError())
+                    return
+                }
+
+                guard !self.isInitialized else {
+                    continuation.resume()
+                    return
+                }
+
                 guard let window = self.getKeyWindow() else {
                     continuation.resume(throwing: ChatError.initializationFailed("No key window found"))
                     return
                 }
-                
+
                 let chatView = AssembledChatView(configuration: self.configuration, delegate: self.delegate)
                 chatView.translatesAutoresizingMaskIntoConstraints = false
                 chatView.isHidden = false
-                
+
                 window.addSubview(chatView)
-                
                 NSLayoutConstraint.activate([
                     chatView.topAnchor.constraint(equalTo: window.safeAreaLayoutGuide.topAnchor),
                     chatView.leadingAnchor.constraint(equalTo: window.leadingAnchor),
                     chatView.trailingAnchor.constraint(equalTo: window.trailingAnchor),
                     chatView.bottomAnchor.constraint(equalTo: window.safeAreaLayoutGuide.bottomAnchor)
                 ])
-                
+
                 self.chatView = chatView
                 chatView.load()
-                
                 self.isInitialized = true
+                self.initializationID = nil
                 continuation.resume()
             }
         }
