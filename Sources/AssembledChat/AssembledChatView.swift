@@ -115,22 +115,29 @@ public class AssembledChatView: UIView {
     }
     
     public func open() {
-        guard !isOpen else {
-            return
-        }
-        
         executeWhenReady {
+            // Ensure native visibility is updated immediately. We also listen for
+            // JS-driven open/close events, but those may not fire on every
+            // programmatic visibility change.
+            self.isHidden = false
             self.isOpen = true
+
+            // If this chat view is being used as a window-level overlay (the pattern
+            // used by `AssembledChat.initialize()`), it can end up behind other views
+            // after presenting/dismissing modal view controllers. Only in that case,
+            // bring it to the front to ensure it remains visible.
+            if let superview = self.superview, superview is UIWindow {
+                superview.bringSubviewToFront(self)
+            }
+
             self.messageBridge.setVisibility(true)
         }
     }
     
     public func close() {
-        guard isOpen else {
-            return
-        }
-        
         executeWhenReady {
+            // Hide natively immediately (don't rely solely on JS events).
+            self.isHidden = true
             self.isOpen = false
             self.messageBridge.setVisibility(false)
         }
