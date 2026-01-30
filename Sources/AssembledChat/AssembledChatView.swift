@@ -119,6 +119,7 @@ public class AssembledChatView: UIView {
             // Ensure native visibility is updated immediately. We also listen for
             // JS-driven open/close events, but those may not fire on every
             // programmatic visibility change.
+            let wasAlreadyOpen = self.isOpen
             self.isHidden = false
             self.isOpen = true
 
@@ -131,15 +132,26 @@ public class AssembledChatView: UIView {
             }
 
             self.messageBridge.setVisibility(true)
+
+            // Notify delegate immediately since JS events may not fire reliably
+            if !wasAlreadyOpen {
+                self.delegate?.assembledChatDidOpen()
+            }
         }
     }
-    
+
     public func close() {
         executeWhenReady {
             // Hide natively immediately (don't rely solely on JS events).
+            let wasOpen = self.isOpen
             self.isHidden = true
             self.isOpen = false
             self.messageBridge.setVisibility(false)
+
+            // Notify delegate immediately since JS events may not fire reliably
+            if wasOpen {
+                self.delegate?.assembledChatDidClose()
+            }
         }
     }
     
@@ -231,23 +243,35 @@ extension AssembledChatView: MessageBridgeDelegate {
     func messageBridge(_ bridge: MessageBridge, didReceiveEvent event: ChatEvent) {
         switch event {
         case .loaded:
+            let wasLoaded = isLoaded
             isLoaded = true
             processPendingOperations()
-            delegate?.assembledChatDidLoad()
-            
+            // Only notify if this is the first load
+            if !wasLoaded {
+                delegate?.assembledChatDidLoad()
+            }
+
         case .opened:
+            // Only notify if state actually changed (avoid duplicate with programmatic open)
+            let wasOpen = isOpen
             isHidden = false
             isOpen = true
-            delegate?.assembledChatDidOpen()
-            
+            if !wasOpen {
+                delegate?.assembledChatDidOpen()
+            }
+
         case .closed:
+            // Only notify if state actually changed (avoid duplicate with programmatic close)
+            let wasOpen = isOpen
             isHidden = true
             isOpen = false
-            delegate?.assembledChatDidClose()
-            
+            if wasOpen {
+                delegate?.assembledChatDidClose()
+            }
+
         case .settingsLoaded:
             break
-            
+
         case .notificationsReceived(let notifications):
             let decodedNotifications = notifications.compactMap { notificationData -> ChatNotification? in
                 guard let jsonData = try? JSONSerialization.data(withJSONObject: notificationData),
@@ -256,7 +280,7 @@ extension AssembledChatView: MessageBridgeDelegate {
                 }
                 return notification
             }
-            
+
             for notification in decodedNotifications {
                 delegate?.assembledChat(didReceiveNotification: notification)
             }
