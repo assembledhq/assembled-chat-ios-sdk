@@ -127,12 +127,12 @@ public class AssembledChat {
             delegate?.assembledChat(didReceiveError: ChatError.notReady)
             return
         }
-        
+
         DispatchQueue.main.async { [weak self] in
             self?.chatView?.hideLauncher()
         }
     }
-    
+
     /// Authenticates a user with the chat widget using a JWT token.
     public func authenticateUser(jwtToken: String, userData: UserData? = nil) async throws {
         guard isInitialized else {

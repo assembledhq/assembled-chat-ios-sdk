@@ -136,7 +136,7 @@ internal class MessageBridge: NSObject, WKScriptMessageHandler {
             "type": "SET_LAUNCHER_VISIBILITY",
             "isVisible": isVisible
         ]
-        
+
         sendMessage(message)
     }
 }

@@ -91,26 +91,59 @@ public class AssembledChatView: UIView {
             delegate?.assembledChat(didReceiveError: ChatError.invalidConfiguration("Invalid base URL"))
             return
         }
-        
+
         var queryItems: [URLQueryItem] = [
             URLQueryItem(name: "company_id", value: configuration.companyId)
         ]
-        
+
         if let profileId = configuration.profileId {
             queryItems.append(URLQueryItem(name: "profile_id", value: profileId))
         }
-        
+
         if configuration.debug {
             queryItems.append(URLQueryItem(name: "debug", value: "true"))
         }
-        
+
+        if configuration.activated {
+            queryItems.append(URLQueryItem(name: "activated", value: "true"))
+        }
+
+        if configuration.disableLauncher {
+            queryItems.append(URLQueryItem(name: "disable_launcher", value: "true"))
+        }
+
+        if let buttonColor = configuration.buttonColor {
+            queryItems.append(URLQueryItem(name: "button_color", value: buttonColor))
+        }
+
+        // UI Customization options
+        if configuration.disableCloseButton {
+            queryItems.append(URLQueryItem(name: "disable_close_button", value: "true"))
+        }
+
+        if configuration.disableHeader {
+            queryItems.append(URLQueryItem(name: "disable_header", value: "true"))
+        }
+
+        if let attachmentIconVariant = configuration.attachmentIconVariant {
+            queryItems.append(URLQueryItem(name: "attachment_icon_variant", value: attachmentIconVariant.rawValue))
+        }
+
+        if let inputBorderRadius = configuration.inputBorderRadius {
+            queryItems.append(URLQueryItem(name: "input_border_radius", value: inputBorderRadius))
+        }
+
+        if let messageBorderRadius = configuration.messageBorderRadius {
+            queryItems.append(URLQueryItem(name: "message_border_radius", value: messageBorderRadius))
+        }
+
         urlComponents.queryItems = queryItems
-        
+
         guard let url = urlComponents.url else {
             delegate?.assembledChat(didReceiveError: ChatError.invalidConfiguration("Invalid URL"))
             return
         }
-        
+
         let request = URLRequest(url: url)
         webView.load(request)
     }
@@ -185,7 +218,7 @@ public class AssembledChatView: UIView {
             self.messageBridge.setLauncherVisibility(false)
         }
     }
-    
+
     private func executeWhenReady(_ operation: @escaping () -> Void) {
         if isLoaded {
             operation()
