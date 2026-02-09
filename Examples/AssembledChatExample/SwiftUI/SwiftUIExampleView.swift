@@ -90,13 +90,20 @@ struct SwiftUIExampleView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                
+
                 NavigationLink(destination: EmbeddedChatView(companyId: viewModel.companyId)) {
                     Label("Open Embedded Chat", systemImage: "rectangle.portrait")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                
+
+                NavigationLink(destination: CustomizedChatView(companyId: viewModel.companyId)) {
+                    Label("Open Customized Chat", systemImage: "paintpalette")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(.purple)
+
                 Button(action: viewModel.toggleDebugMode) {
                     Label(
                         viewModel.isDebugEnabled ? "Disable Debug Mode" : "Enable Debug Mode",

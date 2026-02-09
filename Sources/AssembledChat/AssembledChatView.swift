@@ -144,6 +144,11 @@ public class AssembledChatView: UIView {
             return
         }
 
+        // Debug: Print the URL being loaded
+        if configuration.debug {
+            print("[AssembledChat] Loading URL: \(url.absoluteString)")
+        }
+
         let request = URLRequest(url: url)
         webView.load(request)
     }
@@ -242,8 +247,9 @@ public class AssembledChatView: UIView {
 extension AssembledChatView: WKNavigationDelegate {
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         injectViewportMetaTag()
+        injectUICustomizations()
     }
-    
+
     private func injectViewportMetaTag() {
         let viewportScript = """
         (function() {
@@ -256,10 +262,83 @@ extension AssembledChatView: WKNavigationDelegate {
             viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
         })();
         """
-        
+
         webView.evaluateJavaScript(viewportScript) { _, error in
             if let error = error {
                 self.delegate?.assembledChat(didReceiveError: ChatError.bridgeError("Failed to inject viewport meta tag: \(error.localizedDescription)"))
+            }
+        }
+    }
+
+    private func injectUICustomizations() {
+        // Send configuration to the web chat via postMessage
+        // The PublicChatApp React component listens for these messages
+
+        var configParts: [String] = []
+
+        if configuration.disableHeader {
+            configParts.append("disableHeader: true")
+        }
+
+        if configuration.disableCloseButton {
+            configParts.append("disableCloseButton: true")
+        }
+
+        if let buttonColor = configuration.buttonColor {
+            configParts.append("primaryButtonColor: '\(buttonColor)'")
+        }
+
+        if let attachmentIconVariant = configuration.attachmentIconVariant {
+            configParts.append("attachmentIconVariant: '\(attachmentIconVariant.rawValue)'")
+        }
+
+        if let inputBorderRadius = configuration.inputBorderRadius {
+            configParts.append("inputBorderRadius: '\(inputBorderRadius)'")
+        }
+
+        if let messageBorderRadius = configuration.messageBorderRadius {
+            configParts.append("messageBorderRadius: '\(messageBorderRadius)'")
+        }
+
+        if let backgroundColor = configuration.backgroundColor {
+            configParts.append("backgroundColor: '\(backgroundColor)'")
+        }
+
+        if let userBubbleColor = configuration.userBubbleColor {
+            configParts.append("userBubbleColor: '\(userBubbleColor)'")
+        }
+
+        if let assistantBubbleColor = configuration.assistantBubbleColor {
+            configParts.append("assistantBubbleColor: '\(assistantBubbleColor)'")
+        }
+
+        if !configParts.isEmpty {
+            let configObject = configParts.joined(separator: ", ")
+            let script = """
+            (function() {
+                function sendConfig() {
+                    const config = { \(configObject) };
+                    console.log('[AssembledChat iOS] Sending configuration:', config);
+                    window.postMessage(config, '*');
+                    return true;
+                }
+
+                // Try immediately
+                sendConfig();
+
+                // Also try after delays to ensure the React app is listening
+                setTimeout(sendConfig, 500);
+                setTimeout(sendConfig, 1000);
+                setTimeout(sendConfig, 2000);
+            })();
+            """
+
+            webView.evaluateJavaScript(script) { _, error in
+                if let error = error, self.configuration.debug {
+                    print("[AssembledChat] Failed to send configuration via postMessage: \(error.localizedDescription)")
+                } else if self.configuration.debug {
+                    print("[AssembledChat] Configuration sent via postMessage")
+                }
             }
         }
     }

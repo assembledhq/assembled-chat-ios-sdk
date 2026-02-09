@@ -45,6 +45,15 @@ public struct AssembledChatConfiguration {
     /// Set the border radius of chat message bubbles (e.g. "6px").
     public let messageBorderRadius: String?
 
+    /// Set the background color of the chat interface (hex format).
+    public let backgroundColor: String?
+
+    /// Set the color for user message bubbles (hex format).
+    public let userBubbleColor: String?
+
+    /// Set the color for assistant/bot message bubbles (hex format).
+    public let assistantBubbleColor: String?
+
     public init(
         companyId: String,
         profileId: String? = nil,
@@ -58,7 +67,10 @@ public struct AssembledChatConfiguration {
         disableHeader: Bool = false,
         attachmentIconVariant: AttachmentIconVariant? = nil,
         inputBorderRadius: String? = nil,
-        messageBorderRadius: String? = nil
+        messageBorderRadius: String? = nil,
+        backgroundColor: String? = nil,
+        userBubbleColor: String? = nil,
+        assistantBubbleColor: String? = nil
     ) {
         self.companyId = companyId
         self.profileId = profileId
@@ -73,6 +85,9 @@ public struct AssembledChatConfiguration {
         self.attachmentIconVariant = attachmentIconVariant
         self.inputBorderRadius = inputBorderRadius
         self.messageBorderRadius = messageBorderRadius
+        self.backgroundColor = backgroundColor
+        self.userBubbleColor = userBubbleColor
+        self.assistantBubbleColor = assistantBubbleColor
     }
 }
 
