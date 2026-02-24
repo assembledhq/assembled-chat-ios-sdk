@@ -99,8 +99,8 @@ public class AssembledChatView: UIView {
             queryItems.append(URLQueryItem(name: "profile_id", value: profileId))
         }
         
-        if configuration.debug {
-            queryItems.append(URLQueryItem(name: "debug", value: "true"))
+        for param in configuration.allQueryParameters {
+            queryItems.append(URLQueryItem(name: param.key, value: param.value))
         }
         
         urlComponents.queryItems = queryItems

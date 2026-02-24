@@ -147,6 +147,23 @@ For secure, authenticated sessions:
 try await chat.authenticateUser(jwtToken: "your-jwt-token")
 ```
 
+### Customize the Widget
+
+Pass additional options to control the widget's appearance and behavior:
+
+```swift
+let config = AssembledChatConfiguration(
+    companyId: "your-company-id",
+    options: [
+        "disable_header": "true",
+        "launcher_size": "large",
+        "message_border_radius": "6px"
+    ]
+)
+```
+
+See the [advanced setup guide](https://support.assembled.com/hc/en-us/articles/33739515754637) for all available options.
+
 ### Enable Debug Mode
 
 For troubleshooting during development:
