@@ -89,6 +89,23 @@ let config = AssembledChatConfiguration(
 )
 ```
 
+### Customization Options
+
+You can pass additional configuration options to the chat widget using the `options` dictionary. These are forwarded as URL query parameters and support any option the chat widget accepts, without requiring an SDK update.
+
+```swift
+let config = AssembledChatConfiguration(
+    companyId: "your-company-id",
+    options: [
+        "disable_header": "true",
+        "launcher_size": "large",
+        "message_border_radius": "6px"
+    ]
+)
+```
+
+Keys use `snake_case` matching the widget's `data-*` attributes (strip `data-`, replace hyphens with underscores). For the full list of supported keys, see the [advanced setup guide](https://support.assembled.com/hc/en-us/articles/33739515754637).
+
 ### User Authentication
 
 ```swift
