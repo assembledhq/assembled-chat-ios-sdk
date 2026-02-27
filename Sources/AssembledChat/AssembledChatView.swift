@@ -31,15 +31,16 @@ public class AssembledChatView: UIView {
         let webConfiguration = WKWebViewConfiguration()
         webConfiguration.allowsInlineMediaPlayback = true
         webConfiguration.mediaTypesRequiringUserActionForPlayback = []
-        
+
         if #available(iOS 14.0, *) {
             let preferences = WKWebpagePreferences()
             preferences.allowsContentJavaScript = true
             webConfiguration.defaultWebpagePreferences = preferences
         }
-        
+
         webView = WKWebView(frame: .zero, configuration: webConfiguration)
         webView.navigationDelegate = self
+        webView.uiDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
         webView.scrollView.isScrollEnabled = true
         webView.scrollView.contentInsetAdjustmentBehavior = .always
@@ -192,7 +193,7 @@ public class AssembledChatView: UIView {
             pendingOperations.append(operation)
         }
     }
-    
+
     private func processPendingOperations() {
         for operation in pendingOperations {
             operation()
@@ -320,5 +321,22 @@ public extension AssembledChatDelegate {
     func assembledChatDidClose() {}
     func assembledChat(didReceiveError error: Error) {}
     func assembledChat(didReceiveNotification notification: ChatNotification) {}
+}
+
+extension AssembledChatView: WKUIDelegate {
+    @available(iOS 15.0, *)
+    public func webView(
+        _ webView: WKWebView,
+        requestMediaCapturePermissionFor origin: WKSecurityOrigin,
+        initiatedByFrame frame: WKFrameInfo,
+        type: WKMediaCaptureType,
+        decisionHandler: @escaping (WKPermissionDecision) -> Void
+    ) {
+        if configuration.debug {
+            print("[AssembledChat] Media capture permission requested - Type: \(type), Origin: \(origin.host)")
+        }
+        // Grant permission for microphone capture from the Assembled chat domain
+        decisionHandler(.grant)
+    }
 }
 

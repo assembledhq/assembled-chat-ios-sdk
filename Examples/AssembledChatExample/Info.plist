@@ -46,6 +46,10 @@
         <string>UIInterfaceOrientationLandscapeLeft</string>
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>This app needs access to your microphone to send voice messages in the chat.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>This app needs access to speech recognition to convert your voice to text.</string>
 </dict>
 </plist>
 
