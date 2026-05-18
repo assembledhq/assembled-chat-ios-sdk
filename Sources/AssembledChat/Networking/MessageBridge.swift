@@ -88,28 +88,31 @@ internal class MessageBridge: NSObject, WKScriptMessageHandler {
     }
     
     func authenticateUser(jwtToken: String, userData: UserData?) {
+        var enriched = userData ?? UserData()
+        enriched.applyCountryFallback()
+
         var message: [String: Any] = [
             "type": "USER_DATA_UPDATE",
             "jwtToken": jwtToken
         ]
-        
-        if let userData = userData {
-            if let userDataDict = try? userData.asDictionary() {
-                message["userData"] = userDataDict
-            }
+
+        if let userDataDict = try? enriched.asDictionary() {
+            message["userData"] = userDataDict
         }
-        
+
         sendMessage(message)
     }
     
     func updateUserData(_ userData: UserData) {
-        guard let userDataDict = try? userData.asDictionary() else { return }
-        
+        var enriched = userData
+        enriched.applyCountryFallback()
+        guard let userDataDict = try? enriched.asDictionary() else { return }
+
         let message: [String: Any] = [
             "type": "USER_DATA_UPDATE",
             "userData": userDataDict
         ]
-        
+
         sendMessage(message)
     }
     
