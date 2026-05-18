@@ -104,6 +104,15 @@ extension JSONValue {
 }
 
 extension UserData {
+    mutating func applyCountryFallback() {
+        if metadata?["country"] == nil, let regionCode = Locale.current.regionCode {
+            if metadata == nil {
+                metadata = [:]
+            }
+            metadata?["country"] = JSONValue(regionCode)
+        }
+    }
+
     func asDictionary() throws -> [String: Any] {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
