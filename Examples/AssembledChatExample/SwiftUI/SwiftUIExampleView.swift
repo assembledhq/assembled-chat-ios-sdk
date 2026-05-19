@@ -34,7 +34,7 @@ struct SwiftUIExampleView: View {
             }
             .navigationTitle("SwiftUI Example")
             .sheet(isPresented: $showChat) {
-                ChatModalView(companyId: viewModel.companyId)
+                ChatModalView(companyId: viewModel.companyId, userData: viewModel.buildUserData())
             }
         }
     }
@@ -91,7 +91,7 @@ struct SwiftUIExampleView: View {
                 }
                 .buttonStyle(.bordered)
                 
-                NavigationLink(destination: EmbeddedChatView(companyId: viewModel.companyId)) {
+                NavigationLink(destination: EmbeddedChatView(companyId: viewModel.companyId, userData: viewModel.buildUserData())) {
                     Label("Open Embedded Chat", systemImage: "rectangle.portrait")
                         .frame(maxWidth: .infinity)
                 }
@@ -166,6 +166,14 @@ class SwiftUIExampleViewModel: ObservableObject {
         UserDefaults.standard.set(userEmail, forKey: "userEmail")
         UserDefaults.standard.set(companyId, forKey: "companyId")
         statusMessage = "User info saved successfully"
+    }
+
+    func buildUserData() -> UserData? {
+        guard !userName.isEmpty || !userEmail.isEmpty else { return nil }
+        return UserData(
+            email: userEmail.isEmpty ? nil : userEmail,
+            name: userName.isEmpty ? nil : userName
+        )
     }
     
     func toggleDebugMode() {
