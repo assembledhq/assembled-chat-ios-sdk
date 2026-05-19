@@ -192,6 +192,21 @@ public class AssembledChatView: UIView {
             pendingOperations.append(operation)
         }
     }
+
+    /// Forwards any `userData` / `jwtToken` provided at construction time to the
+    /// web widget once it has finished loading. Runs before any user-queued
+    /// operations so explicit `setUserData` / `authenticateUser` calls still win.
+    ///
+    /// Always sends a `USER_DATA_UPDATE` (with at least the device-region country
+    /// fallback) when no JWT is configured, so the widget receives the caller's
+    /// locale even without explicit user data.
+    private func sendInitialUserData() {
+        if let jwtToken = configuration.jwtToken {
+            messageBridge.authenticateUser(jwtToken: jwtToken, userData: configuration.userData)
+        } else {
+            messageBridge.updateUserData(configuration.userData ?? UserData())
+        }
+    }
     
     private func processPendingOperations() {
         for operation in pendingOperations {
@@ -245,6 +260,9 @@ extension AssembledChatView: MessageBridgeDelegate {
         case .loaded:
             let wasLoaded = isLoaded
             isLoaded = true
+            if !wasLoaded {
+                sendInitialUserData()
+            }
             processPendingOperations()
             // Only notify if this is the first load
             if !wasLoaded {
