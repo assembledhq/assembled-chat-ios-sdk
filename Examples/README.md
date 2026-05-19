@@ -47,13 +47,21 @@ git clone https://github.com/assembledhq/assembled-chat-ios-sdk.git
 cd assembled-chat-ios-sdk/Examples
 ```
 
-2. **Open in Xcode:**
+2. **Generate the Xcode project** (one-time, requires [xcodegen](https://github.com/yonaskolb/XcodeGen) — `brew install xcodegen`):
+
+```bash
+xcodegen generate
+```
+
+The project is generated from `project.yml`, which is the source of truth. Re-run `xcodegen generate` whenever you add or rename source files. Avoid editing `AssembledChatExample.xcodeproj` directly — those edits get overwritten on the next generation.
+
+3. **Open in Xcode:**
 
 ```bash
 open AssembledChatExample.xcodeproj
 ```
 
-3. **Build and run in Xcode:**
+4. **Build and run in Xcode:**
    - **Wait** for Xcode to finish resolving packages (check the status bar)
    - **Select simulator**: Click the device dropdown (top center) → choose **iPhone 16** (or any iPhone)
    - **Run**: Press `Cmd + R` (or click ▶️) to build, install, and launch the app
