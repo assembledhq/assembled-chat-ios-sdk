@@ -1,0 +1,32 @@
+name: AssembledChatExample
+options:
+  bundleIdPrefix: com.assembled
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+packages:
+  AssembledChat:
+    path: ..
+
+targets:
+  AssembledChatExample:
+    type: application
+    platform: iOS
+    sources:
+      - path: AssembledChatExample
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.assembled.AssembledChatExample
+        INFOPLIST_FILE: AssembledChatExample/Info.plist
+        TARGETED_DEVICE_FAMILY: "1,2"
+        IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: NO
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ENABLE_PREVIEWS: YES
+    dependencies:
+      - package: AssembledChat
