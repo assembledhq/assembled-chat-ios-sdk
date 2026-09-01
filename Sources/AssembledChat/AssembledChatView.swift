@@ -43,6 +43,7 @@ public class AssembledChatView: UIView {
         
         webView = WKWebView(frame: .zero, configuration: webConfiguration)
         webView.navigationDelegate = self
+        webView.uiDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
         webView.scrollView.isScrollEnabled = true
         webView.scrollView.contentInsetAdjustmentBehavior = .always
@@ -267,6 +268,25 @@ extension AssembledChatView: WKNavigationDelegate {
     }
 }
 
+extension AssembledChatView: WKUIDelegate {
+    public func webView(
+        _ webView: WKWebView,
+        createWebViewWith configuration: WKWebViewConfiguration,
+        for navigationAction: WKNavigationAction,
+        windowFeatures: WKWindowFeatures
+    ) -> WKWebView? {
+        guard navigationAction.targetFrame == nil,
+              let url = navigationAction.request.url,
+              let scheme = url.scheme?.lowercased(),
+              scheme == "http" || scheme == "https" else {
+            return nil
+        }
+
+        UIApplication.shared.open(url)
+        return nil
+    }
+}
+
 extension AssembledChatView: MessageBridgeDelegate {
     func messageBridge(_ bridge: MessageBridge, didReceiveEvent event: ChatEvent) {
         switch event {
@@ -352,4 +372,3 @@ public extension AssembledChatDelegate {
     func assembledChat(didReceiveError error: Error) {}
     func assembledChat(didReceiveNotification notification: ChatNotification) {}
 }
-
