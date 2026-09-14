@@ -30,16 +30,20 @@ public class AssembledChat {
     }
     
     private var chatView: AssembledChatView?
+    private var overlayWindow: ChatOverlayWindow?
     private var isInitialized = false
     
     public init(configuration: AssembledChatConfiguration) {
         self.configuration = configuration
     }
     
-    /// Initializes the chat widget by adding it to the key window.
+    /// Initializes the chat widget in an overlay window above the app's key window.
     ///
     /// This method must be called before using any other chat methods.
-    /// It creates the underlying WebView and loads the chat interface.
+    /// It creates the underlying WebView and loads the chat interface. The
+    /// overlay window has its own root view controller so WebKit can present
+    /// native pickers (file attachments, camera), and becomes the key window
+    /// while the chat is open.
     ///
     /// - Throws: `ChatError.initializationFailed` if the key window cannot be found.
     public func initialize() async throws {
@@ -58,19 +62,12 @@ public class AssembledChat {
                 }
                 
                 let chatView = AssembledChatView(configuration: self.configuration, delegate: self.delegate)
-                chatView.translatesAutoresizingMaskIntoConstraints = false
                 chatView.isHidden = false
-                
-                window.addSubview(chatView)
-                
-                NSLayoutConstraint.activate([
-                    chatView.topAnchor.constraint(equalTo: window.safeAreaLayoutGuide.topAnchor),
-                    chatView.leadingAnchor.constraint(equalTo: window.leadingAnchor),
-                    chatView.trailingAnchor.constraint(equalTo: window.trailingAnchor),
-                    chatView.bottomAnchor.constraint(equalTo: window.safeAreaLayoutGuide.bottomAnchor)
-                ])
-                
+
+                let overlayWindow = ChatOverlayWindow(chatView: chatView, keyWindow: window)
+
                 self.chatView = chatView
+                self.overlayWindow = overlayWindow
                 chatView.load()
                 
                 self.isInitialized = true
@@ -175,6 +172,8 @@ public class AssembledChat {
     public func teardown() {
         DispatchQueue.main.async { [weak self] in
             self?.chatView?.removeFromSuperview()
+            self?.overlayWindow?.dismantle()
+            self?.overlayWindow = nil
             self?.chatView = nil
             self?.isInitialized = false
         }
