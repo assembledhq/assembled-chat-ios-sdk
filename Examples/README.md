@@ -311,41 +311,6 @@ let config = AssembledChatConfiguration(companyId: companyId)
 2. Check view hierarchy in Debug View Hierarchy
 3. Verify constraints are properly set
 
-### File attachments not opening a picker?
-The attachment button in the chat composer is a web `<input type="file">`. WebKit
-presents the native Files/Photos picker from the view controller that owns the
-web view, so the SDK hosts the window-level overlay (`AssembledChat.initialize()`)
-in its own window with a root view controller. No Info.plist usage-description
-keys are needed for the Files/Photos picker; add `NSCameraUsageDescription` to the
-host app only if you want "Take Photo" to work.
-
-## ✅ Manual Test Plan: File Attachments
-
-Nothing beyond Xcode and XcodeGen needs to be installed. Run through this on an
-iOS Simulator and, if possible, a physical iPhone.
-
-1. **Setup**
-   - Install Xcode 14+ from the App Store and open it once to install the iOS platform.
-   - `brew install xcodegen`
-   - `cd Examples && xcodegen generate && open AssembledChatExample.xcodeproj`
-   - Wait for Xcode to resolve the local `AssembledChat` package (File → Packages → Resolve Package Versions if it does not).
-   - Set a real company ID in the Settings tab of the example app (or `ContentView.swift`).
-   - Simulator only: drag a PNG/JPEG onto the simulator window so Photos has an image to pick, or use Safari in the simulator to save an image.
-2. **Window-level overlay (SwiftUI tab → "Window Overlay" / `AssembledChatManager`)**
-   - Tap Initialize, then Open Chat.
-   - Tap the paperclip/attachment button in the composer.
-   - Expected: the native "Photo Library / Choose File" sheet appears. Pick an image; a thumbnail appears in the composer; send and confirm the agent side receives it.
-   - Close the chat and confirm the underlying app receives taps and the keyboard still works in the host app.
-   - Re-open the chat and repeat once (checks key-window restore).
-3. **UIKit `AssembledChatViewController` and SwiftUI embedded/modal examples**
-   - Open each example, tap the attachment button, and pick a file. Expected: same picker behavior as above.
-4. **Regression checks**
-   - Present a modal (e.g. the Settings sheet) while chat is open; chat must remain on top and still accept taps.
-   - Rotate the device with chat open; the overlay must resize.
-   - Enable Debug in Settings and, on iOS 16.4+, attach Safari → Develop → Simulator → `public_chat.html` to see web console output.
-5. **Physical device**
-   - Repeat step 2 on a real iPhone; also test "Take Photo" if the host app declares `NSCameraUsageDescription`.
-
 ## 📚 Additional Resources
 
 - **SDK Documentation:** [GitHub Repository](https://github.com/assembledhq/assembled-chat-ios-sdk)
