@@ -311,46 +311,6 @@ let config = AssembledChatConfiguration(companyId: companyId)
 2. Check view hierarchy in Debug View Hierarchy
 3. Verify constraints are properly set
 
-### File attachments not opening a picker?
-The attachment button is a web `<input type="file">`. WebKit presents the system picker from the
-view controller that owns the web view. Chat embedded in your own screen already has one; the
-window-level overlay created by `AssembledChat.initialize()` gets one from its overlay window's
-root view controller.
-
-Picking an existing file from Files needs no Info.plist keys. **`NSCameraUsageDescription` is
-required** if the picker offers "Take Photo or Video" — iOS terminates the app the moment the
-camera is touched without it, so this presents as a crash on tap rather than a missing option.
-Add `NSMicrophoneUsageDescription` if video capture is allowed, and
-`NSPhotoLibraryUsageDescription` if you still support iOS 13.
-
-## ✅ Manual Test Plan: File Attachments
-
-Requires Xcode 14.3+ and XcodeGen. Run on a simulator and, if possible, a physical iPhone.
-
-1. **Setup**
-   - `brew install xcodegen`
-   - `cd Examples && xcodegen generate && open AssembledChatExample.xcodeproj`
-   - Wait for Xcode to resolve the local `AssembledChat` package (File → Packages → Resolve Package Versions if it does not).
-   - Set a real company ID in the Settings tab.
-   - Add the usage-description keys above to `AssembledChatExample/Info.plist`, or the picker will crash the example app.
-   - Simulator only: drag a PNG/JPEG onto the simulator window so Photos has something to pick.
-2. **Window-level overlay** — the path this fix targets
-   - The bundled SwiftUI and UIKit tabs cannot exercise it: they embed chat in a view controller, which always had a presenter. Drive it from a screen that calls `initialize()` then `open()` with nothing else hosting the chat.
-   - Tap the attachment button **with a finger or the mouse**. A synthetic `input.click()` from the console is not a user gesture and will report success misleadingly.
-   - Expected: the system picker appears. Pick an image, confirm the thumbnail in the composer, send, and confirm receipt on the agent side.
-3. **Control: `AssembledChatViewController` and the SwiftUI embedded/modal tabs**
-   - Same steps. These should behave identically before and after the fix.
-4. **Regression checks** — once `initialize()` runs, the overlay window is frontmost for the app's lifetime
-   - Status bar: give the host screen `.lightContent`, call `initialize()` without opening chat, and confirm the status bar is unchanged.
-   - Appearance: pin the host app to light mode on a device in dark mode; the widget should follow the app, not the system.
-   - Alerts: present a `UIAlertController` from the host while chat is open; it must be visible and tappable.
-   - Key-window restore: close the chat, then confirm host text fields still raise the keyboard. Repeat after swapping the app's root window.
-   - Orientation: rotate with chat open. A portrait-locked host must stay portrait, and the overlay must resize.
-   - Pass-through: with chat closed, confirm the app receives taps across the whole screen.
-   - Enable Debug and, on iOS 16.4+, attach Safari → Develop → Simulator → `public_chat.html` to see console output.
-5. **Physical device**
-   - Repeat step 2 on a real iPhone, including "Take Photo".
-
 ## 📚 Additional Resources
 
 - **SDK Documentation:** [GitHub Repository](https://github.com/assembledhq/assembled-chat-ios-sdk)

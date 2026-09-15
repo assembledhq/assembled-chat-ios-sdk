@@ -5,7 +5,7 @@ The official iOS SDK for integrating Assembled's chat widget into your iOS appli
 ## Requirements
 
 - iOS 13.0+
-- Xcode 14.3+ (the SDK builds against the iOS 16.4 SDK)
+- Xcode 14.0+
 - Swift 5.9+
 
 ## Installation
@@ -131,29 +131,6 @@ try await chat.setUserData(userData)
 - `setUserData(_:)` - Update user data
 - `setDebug(_:)` - Enable/disable debug mode
 - `teardown()` - Clean up and remove the chat widget
-
-### File Attachments
-
-The attachment button in the chat composer is a web `<input type="file">`. WebKit presents the
-system picker from the view controller that owns the web view. Chat embedded in your own screen
-(`AssembledChatViewController` or the SwiftUI views) already has one; the window-level overlay
-created by `initialize()` hosts the chat in its own window with a root view controller so the
-picker has a presenter there too.
-
-Declare the usage descriptions your attachment flow needs in **your app's** `Info.plist`. iOS
-terminates the app when a capture device is accessed without one, so a missing key shows up as a
-crash when the user taps the option, not as a disabled feature:
-
-| Key | When it is required |
-| --- | --- |
-| `NSCameraUsageDescription` | Required if the picker offers "Take Photo or Video". |
-| `NSMicrophoneUsageDescription` | Required if video capture is allowed. |
-| `NSPhotoLibraryUsageDescription` | Only needed on iOS 13. iOS 14+ uses the out-of-process photo picker, which requires no key. |
-
-Choosing an existing file from Files needs no usage description on any supported version.
-
-With `debug: true` in your configuration, the chat web view is inspectable from Safari's Develop
-menu on iOS 16.4+, which is the quickest way to confirm a tap reached the page.
 
 ## 📱 Example App
 
