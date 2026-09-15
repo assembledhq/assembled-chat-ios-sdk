@@ -11,13 +11,11 @@ final class ChatOverlayHost {
 
     private let hostViewController: ChatHostViewController
     private weak var hostWindow: UIWindow?
+    private weak var hostWindowScene: UIWindowScene?
 
-    init?(chatView: AssembledChatView, keyWindow: UIWindow) {
-        guard keyWindow.rootViewController != nil else {
-            return nil
-        }
-
+    init(chatView: AssembledChatView, keyWindow: UIWindow) {
         hostViewController = ChatHostViewController(chatView: chatView)
+        hostWindowScene = keyWindow.windowScene
         attach(to: keyWindow)
         hostViewController.view.isHidden = true
 
@@ -27,16 +25,16 @@ final class ChatOverlayHost {
     }
 
     deinit {
-        hostViewController.chatView.visibilityDidChange = nil
-        guard let hostedView = hostViewController.viewIfLoaded else {
-            return
+        let controller = hostViewController
+        let cleanup = {
+            controller.chatView.visibilityDidChange = nil
+            controller.viewIfLoaded?.removeFromSuperview()
         }
+
         if Thread.isMainThread {
-            hostedView.removeFromSuperview()
+            cleanup()
         } else {
-            DispatchQueue.main.async {
-                hostedView.removeFromSuperview()
-            }
+            DispatchQueue.main.async(execute: cleanup)
         }
     }
 
@@ -53,10 +51,12 @@ final class ChatOverlayHost {
     /// If the host app replaces its root window (for example at login/logout),
     /// move chat into the new active hierarchy the next time it opens.
     private func reattachIfNeeded() {
-        guard hostViewController.view.window == nil || hostWindow?.isHidden == true else {
+        guard hostViewController.view.window == nil ||
+                hostWindow == nil ||
+                hostWindow?.isHidden == true else {
             return
         }
-        guard let scene = hostWindow?.windowScene,
+        guard let scene = hostWindowScene,
               let keyWindow = scene.windows.first(where: \.isKeyWindow) else {
             return
         }
@@ -81,6 +81,7 @@ final class ChatOverlayHost {
         ])
 
         hostWindow = window
+        hostWindowScene = window.windowScene
     }
 
     private func detach() {
@@ -91,6 +92,7 @@ final class ChatOverlayHost {
         hostViewController.chatView.visibilityDidChange = nil
         detach()
         hostWindow = nil
+        hostWindowScene = nil
     }
 }
 
@@ -107,6 +109,10 @@ final class ChatHostViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func loadView() {
+        view = PassthroughRootView()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -120,5 +126,12 @@ final class ChatHostViewController: UIViewController {
             chatView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             chatView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
+    }
+}
+
+private final class PassthroughRootView: UIView {
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hitView = super.hitTest(point, with: event)
+        return hitView === self ? nil : hitView
     }
 }

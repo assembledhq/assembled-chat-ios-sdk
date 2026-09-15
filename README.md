@@ -132,6 +132,13 @@ try await chat.setUserData(userData)
 - `setDebug(_:)` - Enable/disable debug mode
 - `teardown()` - Clean up and remove the chat widget
 
+### Attachment Permissions
+
+- **Files:** No permission key is required.
+- **Photo Library:** iOS 14 and later use `PHPicker` and require no permission key. On iOS 13, add `NSPhotoLibraryUsageDescription`.
+- **Camera:** Add `NSCameraUsageDescription`. If it is missing, iOS terminates the app when the user selects camera capture.
+- **Video capture:** Also add `NSMicrophoneUsageDescription`.
+
 ## 📱 Example App
 
 A comprehensive example app demonstrating all SDK features is available in the [`Examples/`](Examples/) directory.

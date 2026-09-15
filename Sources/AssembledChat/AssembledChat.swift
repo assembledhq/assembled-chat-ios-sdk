@@ -63,10 +63,7 @@ public class AssembledChat {
                 let chatView = AssembledChatView(configuration: self.configuration, delegate: self.delegate)
                 chatView.isHidden = true
 
-                guard let overlayHost = ChatOverlayHost(chatView: chatView, keyWindow: window) else {
-                    continuation.resume(throwing: ChatError.initializationFailed("No root view controller found"))
-                    return
-                }
+                let overlayHost = ChatOverlayHost(chatView: chatView, keyWindow: window)
 
                 self.chatView = chatView
                 self.overlayHost = overlayHost
