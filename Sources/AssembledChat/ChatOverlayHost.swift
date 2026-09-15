@@ -26,6 +26,20 @@ final class ChatOverlayHost {
         }
     }
 
+    deinit {
+        hostViewController.chatView.visibilityDidChange = nil
+        guard let hostedView = hostViewController.viewIfLoaded else {
+            return
+        }
+        if Thread.isMainThread {
+            hostedView.removeFromSuperview()
+        } else {
+            DispatchQueue.main.async {
+                hostedView.removeFromSuperview()
+            }
+        }
+    }
+
     private func setVisible(_ isVisible: Bool) {
         if isVisible {
             reattachIfNeeded()

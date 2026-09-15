@@ -47,9 +47,6 @@ public class AssembledChatView: UIView {
         webView.scrollView.contentInsetAdjustmentBehavior = .always
         webView.isOpaque = false
         webView.backgroundColor = .clear
-        if #available(iOS 16.4, *) {
-            webView.isInspectable = configuration.debug
-        }
         
         addSubview(webView)
         
@@ -127,14 +124,6 @@ public class AssembledChatView: UIView {
             let wasAlreadyOpen = self.isOpen
             self.setVisible(true)
             self.isOpen = true
-
-            // If this chat view is being used as a window-level overlay (the pattern
-            // used by `AssembledChat.initialize()`), it can end up behind other views
-            // after presenting/dismissing modal view controllers. Only in that case,
-            // bring it to the front to ensure it remains visible.
-            if let superview = self.superview, superview is UIWindow {
-                superview.bringSubviewToFront(self)
-            }
 
             self.messageBridge.setVisibility(true)
 
