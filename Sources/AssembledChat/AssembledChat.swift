@@ -32,9 +32,17 @@ public class AssembledChat {
     private var chatView: AssembledChatView?
     private var overlayHost: ChatOverlayHost?
     private var isInitialized = false
+    private let fixtureHTML: String?
     
     public init(configuration: AssembledChatConfiguration) {
         self.configuration = configuration
+        fixtureHTML = nil
+    }
+
+    /// Internal test seam for loading a hermetic page instead of the production widget.
+    internal init(configuration: AssembledChatConfiguration, fixtureHTML: String) {
+        self.configuration = configuration
+        self.fixtureHTML = fixtureHTML
     }
     
     /// Initializes the chat widget as an overlay owned by the app's current view controller.
@@ -70,7 +78,11 @@ public class AssembledChat {
 
                 self.chatView = chatView
                 self.overlayHost = overlayHost
-                chatView.load()
+                if let fixtureHTML = self.fixtureHTML {
+                    chatView.loadFixtureHTML(fixtureHTML)
+                } else {
+                    chatView.load()
+                }
                 
                 self.isInitialized = true
                 continuation.resume()
