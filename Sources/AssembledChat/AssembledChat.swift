@@ -44,6 +44,9 @@ public class AssembledChat {
     /// overlay has its own child view controller so WebKit can present native
     /// pickers (file attachments, camera) without taking over the app's window.
     ///
+    /// The overlay starts hidden and draws nothing until `open()` or `showLauncher()`
+    /// is called, so this is safe to call before the host app is ready to show chat.
+    ///
     /// - Throws: `ChatError.initializationFailed` if the key window cannot be found.
     public func initialize() async throws {
         guard !isInitialized else { return }
@@ -106,6 +109,9 @@ public class AssembledChat {
     }
     
     /// Shows the chat launcher button (if applicable).
+    ///
+    /// This makes the overlay visible. While it is visible the overlay covers the host's
+    /// safe area and intercepts touches across it, even though only the launcher is drawn.
     public func showLauncher() {
         guard isInitialized else {
             delegate?.assembledChat(didReceiveError: ChatError.notReady)

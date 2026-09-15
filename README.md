@@ -122,15 +122,36 @@ try await chat.setUserData(userData)
 
 ### Methods
 
-- `initialize()` - Initialize the chat widget (required before use)
-- `open()` - Open the chat interface
+- `initialize()` - Create the chat overlay (required before use). The overlay starts hidden
+- `open()` - Show and open the chat interface
 - `close()` - Close the chat interface
-- `showLauncher()` - Show the chat launcher button
-- `hideLauncher()` - Hide the chat launcher button
+- `showLauncher()` - Show the widget's launcher button
+- `hideLauncher()` - Hide the widget's launcher button
 - `authenticateUser(jwtToken:userData:)` - Authenticate a user with JWT
 - `setUserData(_:)` - Update user data
 - `setDebug(_:)` - Enable/disable debug mode
 - `teardown()` - Clean up and remove the chat widget
+
+### Overlay Visibility
+
+`initialize()` builds the overlay but draws nothing. The chat appears when you call `open()`, and
+the widget's launcher appears when you call `showLauncher()`. `close()` hides the chat while
+keeping the launcher, if you asked for one.
+
+While hidden, the overlay draws nothing and intercepts no touches, so `initialize()` is safe to
+call early — during launch, or behind a screen you have already presented — without affecting the
+rest of your UI.
+
+While the chat or the launcher is visible, the overlay covers your app's safe area and intercepts
+touches across it. A `WKWebView` hit-tests its entire frame regardless of what the page paints, so
+this applies even when only the small launcher bubble is drawn. If your app needs to stay
+interactive alongside a launcher, pass `disableLauncher: true` and present your own button that
+calls `open()`.
+
+> **Changed in 1.3.0:** `initialize()` previously made the overlay visible immediately, which
+> showed the widget's default launcher but also blocked touches across your app's safe area from
+> that moment on. Visibility is now explicit. If you relied on the launcher appearing without
+> calling `showLauncher()`, add that call after `initialize()`.
 
 ### Attachment Permissions
 
