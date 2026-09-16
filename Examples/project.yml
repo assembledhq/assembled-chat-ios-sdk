@@ -30,3 +30,38 @@ targets:
         ENABLE_PREVIEWS: YES
     dependencies:
       - package: AssembledChat
+
+  OverlayRegressionHarness:
+    type: application
+    platform: iOS
+    sources:
+      - OverlayRegressionHarness
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.assembled.AssembledChatOverlayRegressionHarness
+        IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_NSCameraUsageDescription: "Allows the test host to verify camera attachments."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Allows the test host to verify video attachments."
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Allows the test host to verify photo attachments."
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "Allows the test host to verify photo attachments."
+    dependencies:
+      - package: AssembledChat
+
+  OverlayRegressionHarnessUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - OverlayRegressionHarnessUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.assembled.AssembledChatOverlayRegressionHarnessUITests
+        TEST_TARGET_NAME: OverlayRegressionHarness
+        IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.9"
+    dependencies:
+      - target: OverlayRegressionHarness

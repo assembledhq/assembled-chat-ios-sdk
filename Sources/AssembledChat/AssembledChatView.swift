@@ -87,6 +87,11 @@ public class AssembledChatView: UIView {
     }
     
     private static let baseURL = "https://cal.assembledhq.com/public_chat.html"
+
+    /// Loads inline content for internal integration tests without making a network request.
+    internal func loadFixtureHTML(_ html: String) {
+        webView.loadHTMLString(html, baseURL: nil)
+    }
     
     public func load() {
         guard var urlComponents = URLComponents(string: Self.baseURL) else {
