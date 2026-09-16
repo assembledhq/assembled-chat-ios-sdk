@@ -10,7 +10,10 @@ public class AssembledChatView: UIView {
     
     private var isLoaded = false
     private var isOpen = false
+    private var isLauncherVisible = false
     private var pendingOperations: [() -> Void] = []
+
+    var visibilityDidChange: ((Bool) -> Void)?
     
     // MARK: - Initialization
     
@@ -120,16 +123,8 @@ public class AssembledChatView: UIView {
             // JS-driven open/close events, but those may not fire on every
             // programmatic visibility change.
             let wasAlreadyOpen = self.isOpen
-            self.isHidden = false
             self.isOpen = true
-
-            // If this chat view is being used as a window-level overlay (the pattern
-            // used by `AssembledChat.initialize()`), it can end up behind other views
-            // after presenting/dismissing modal view controllers. Only in that case,
-            // bring it to the front to ensure it remains visible.
-            if let superview = self.superview, superview is UIWindow {
-                superview.bringSubviewToFront(self)
-            }
+            self.updateNativeVisibility()
 
             self.messageBridge.setVisibility(true)
 
@@ -144,8 +139,8 @@ public class AssembledChatView: UIView {
         executeWhenReady {
             // Hide natively immediately (don't rely solely on JS events).
             let wasOpen = self.isOpen
-            self.isHidden = true
             self.isOpen = false
+            self.updateNativeVisibility()
             self.messageBridge.setVisibility(false)
 
             // Notify delegate immediately since JS events may not fire reliably
@@ -175,16 +170,29 @@ public class AssembledChatView: UIView {
     
     public func showLauncher() {
         executeWhenReady {
+            self.isLauncherVisible = true
+            self.updateNativeVisibility()
             self.messageBridge.setLauncherVisibility(true)
         }
     }
     
     public func hideLauncher() {
         executeWhenReady {
+            self.isLauncherVisible = false
+            self.updateNativeVisibility()
             self.messageBridge.setLauncherVisibility(false)
         }
     }
+
+    private func updateNativeVisibility() {
+        setVisible(isOpen || isLauncherVisible)
+    }
     
+    private func setVisible(_ isVisible: Bool) {
+        isHidden = !isVisible
+        visibilityDidChange?(isVisible)
+    }
+
     private func executeWhenReady(_ operation: @escaping () -> Void) {
         if isLoaded {
             operation()
@@ -272,8 +280,8 @@ extension AssembledChatView: MessageBridgeDelegate {
         case .opened:
             // Only notify if state actually changed (avoid duplicate with programmatic open)
             let wasOpen = isOpen
-            isHidden = false
             isOpen = true
+            updateNativeVisibility()
             if !wasOpen {
                 delegate?.assembledChatDidOpen()
             }
@@ -281,8 +289,8 @@ extension AssembledChatView: MessageBridgeDelegate {
         case .closed:
             // Only notify if state actually changed (avoid duplicate with programmatic close)
             let wasOpen = isOpen
-            isHidden = true
             isOpen = false
+            updateNativeVisibility()
             if wasOpen {
                 delegate?.assembledChatDidClose()
             }

@@ -30,16 +30,22 @@ public class AssembledChat {
     }
     
     private var chatView: AssembledChatView?
+    private var overlayHost: ChatOverlayHost?
     private var isInitialized = false
     
     public init(configuration: AssembledChatConfiguration) {
         self.configuration = configuration
     }
     
-    /// Initializes the chat widget by adding it to the key window.
+    /// Initializes the chat widget as an overlay owned by the app's current view controller.
     ///
     /// This method must be called before using any other chat methods.
-    /// It creates the underlying WebView and loads the chat interface.
+    /// It creates the underlying WebView and loads the chat interface. The
+    /// overlay has its own child view controller so WebKit can present native
+    /// pickers (file attachments, camera) without taking over the app's window.
+    ///
+    /// The overlay starts hidden and draws nothing until `open()` or `showLauncher()`
+    /// is called, so this is safe to call before the host app is ready to show chat.
     ///
     /// - Throws: `ChatError.initializationFailed` if the key window cannot be found.
     public func initialize() async throws {
@@ -58,19 +64,12 @@ public class AssembledChat {
                 }
                 
                 let chatView = AssembledChatView(configuration: self.configuration, delegate: self.delegate)
-                chatView.translatesAutoresizingMaskIntoConstraints = false
-                chatView.isHidden = false
-                
-                window.addSubview(chatView)
-                
-                NSLayoutConstraint.activate([
-                    chatView.topAnchor.constraint(equalTo: window.safeAreaLayoutGuide.topAnchor),
-                    chatView.leadingAnchor.constraint(equalTo: window.leadingAnchor),
-                    chatView.trailingAnchor.constraint(equalTo: window.trailingAnchor),
-                    chatView.bottomAnchor.constraint(equalTo: window.safeAreaLayoutGuide.bottomAnchor)
-                ])
-                
+                chatView.isHidden = true
+
+                let overlayHost = ChatOverlayHost(chatView: chatView, keyWindow: window)
+
                 self.chatView = chatView
+                self.overlayHost = overlayHost
                 chatView.load()
                 
                 self.isInitialized = true
@@ -110,6 +109,9 @@ public class AssembledChat {
     }
     
     /// Shows the chat launcher button (if applicable).
+    ///
+    /// This makes the overlay visible. While it is visible the overlay covers the host's
+    /// safe area and intercepts touches across it, even though only the launcher is drawn.
     public func showLauncher() {
         guard isInitialized else {
             delegate?.assembledChat(didReceiveError: ChatError.notReady)
@@ -175,6 +177,8 @@ public class AssembledChat {
     public func teardown() {
         DispatchQueue.main.async { [weak self] in
             self?.chatView?.removeFromSuperview()
+            self?.overlayHost?.dismantle()
+            self?.overlayHost = nil
             self?.chatView = nil
             self?.isInitialized = false
         }
