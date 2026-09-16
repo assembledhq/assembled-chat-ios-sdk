@@ -44,6 +44,32 @@ final class OverlayRegressionTests: XCTestCase {
         )
     }
 
+    func testTargetBlankLinkOpensBrowserAndPreservesChat() {
+        app.buttons["harness.attachment"].tap()
+        XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 20))
+        XCTAssertTrue(app.staticTexts["LOCAL FIXTURE READY"].waitForExistence(timeout: 5))
+
+        let surveyLink = app.links["Open survey link"]
+        XCTAssertTrue(surveyLink.waitForExistence(timeout: 5))
+        surveyLink.tap()
+
+        let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
+        XCTAssertTrue(
+            safari.wait(for: .runningForeground, timeout: 10),
+            "The target=_blank HTTPS link did not open the system browser"
+        )
+
+        app.activate()
+        XCTAssertTrue(
+            app.staticTexts["LOCAL FIXTURE READY"].waitForExistence(timeout: 5),
+            "Returning from the browser replaced or reset the chat WebView"
+        )
+        XCTAssertTrue(
+            app.links["Open survey link"].isHittable,
+            "The original chat was not interactive after returning from the browser"
+        )
+    }
+
     func testShowLauncherMakesLauncherInteractive() {
         app.buttons["harness.launcher"].tap()
 

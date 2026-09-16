@@ -58,6 +58,7 @@ final class HarnessViewController: UIViewController {
             <p>LOCAL FIXTURE READY</p>
             <button id="ask" aria-label="Ask us a question">Ask us a question</button>
             <button id="attachment" aria-label="Attach image">Attach image</button>
+            <a id="survey" href="https://example.com/assembled-chat-survey" target="_blank">Open survey link</a>
             <input id="file" type="file" accept="image/*" hidden>
           </main>
           <script>
